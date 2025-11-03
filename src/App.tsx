@@ -14,9 +14,11 @@ export type Todo = Omit<RawTodo, 'userId'> & {
 
 export const App = () => {
   const initialTodos: Todo[] = useMemo(() => {
-    return todosFromServer.map(t => ({
-      ...t,
-      user: usersFromServer.find(u => u.id === t.userId)!,
+    return todosFromServer.map(todoItem => ({
+      ...todoItem,
+      user: usersFromServer.find(
+        currentUser => currentUser.id === todoItem.userId,
+      )!,
     }));
   }, []);
 
@@ -25,8 +27,8 @@ export const App = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | ''>('');
   const [errors, setErrors] = useState({ title: false, user: false });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
 
     const isTitleValid = title.trim() !== '';
     const isUserValid = selectedUserId !== '';
@@ -37,8 +39,10 @@ export const App = () => {
       return;
     }
 
-    const maxId = Math.max(0, ...todos.map(t => t.id));
-    const user = usersFromServer.find(u => u.id === selectedUserId)!;
+    const maxId = Math.max(0, ...todos.map(todoItem => todoItem.id));
+    const user = usersFromServer.find(
+      currentUser => currentUser.id === selectedUserId,
+    )!;
 
     const newTodo: Todo = {
       id: maxId + 1,
@@ -48,7 +52,7 @@ export const App = () => {
       user,
     };
 
-    setTodos(prev => [...prev, newTodo]);
+    setTodos(previousTodos => [...previousTodos, newTodo]);
 
     setTitle('');
     setSelectedUserId('');
@@ -66,13 +70,13 @@ export const App = () => {
             data-cy="titleInput"
             placeholder="Enter a title"
             value={title}
-            onChange={e => {
-              const v = e.target.value;
+            onChange={event => {
+              const value = event.target.value;
 
-              setTitle(v);
+              setTitle(value);
 
-              if (errors.title && v.trim() !== '') {
-                setErrors(prev => ({ ...prev, title: false }));
+              if (errors.title && value.trim() !== '') {
+                setErrors(previous => ({ ...previous, title: false }));
               }
             }}
           />
@@ -83,22 +87,22 @@ export const App = () => {
           <select
             data-cy="userSelect"
             value={selectedUserId === '' ? '' : String(selectedUserId)}
-            onChange={e => {
-              const v = e.target.value;
+            onChange={event => {
+              const value = event.target.value;
 
-              setSelectedUserId(v === '' ? '' : Number(v));
+              setSelectedUserId(value === '' ? '' : Number(value));
 
-              if (errors.user && v !== '') {
-                setErrors(prev => ({ ...prev, user: false }));
+              if (errors.user && value !== '') {
+                setErrors(previous => ({ ...previous, user: false }));
               }
             }}
           >
-            <option value="" disabled={false}>
+            <option value="" disabled>
               Choose a user
             </option>
-            {usersFromServer.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name}
+            {usersFromServer.map(currentUser => (
+              <option key={currentUser.id} value={currentUser.id}>
+                {currentUser.name}
               </option>
             ))}
           </select>
